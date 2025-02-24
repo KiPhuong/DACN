@@ -113,7 +113,7 @@ class Agent():
 
 		self._analyze_response(action_num, state_resp, reward, learning = not deterministic)
 		self.terminated = termination
-		if(self.terminated): print("Done episode")
+		#if(self.terminated): print("Done episode")
 		if(self.verbose): print(debug_msg)
 
 		return

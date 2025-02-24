@@ -48,8 +48,3 @@ class mockSQLenv(object):
 		self.termination = False
 		#if(self.verbose): print('Reset env')
 		return None,0,self.termination,'Env reset'
-
-	def reveal_solution(self):
-		#For debugging only
-		print('Correct escapes are: \n [{0}]: {1} \n [{2}]: {3}'.format(self.setup[0],self.A[self.setup[0]],self.setup[1],self.A[self.setup[1]]))
-		print('Correct SQL injection is: \n [{0}]: {1}'.format(self.setup[2],self.A[self.setup[2]]))
