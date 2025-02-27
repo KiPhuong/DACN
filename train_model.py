@@ -5,7 +5,7 @@ from IPython.display import clear_output
 import datetime
 import joblib
 from tqdm import tqdm
-import timeit
+import time
 #import requests
 #from bs4 import BeautifulSoup
 import os
@@ -17,11 +17,11 @@ import agent as agn
 
 
 def train_model(): 
-    nepisodes = 100
+    nepisodes = 100000
 
     exploration = 0.9
-    min_exploration = 0.2
-    decay = 0.99
+    min_exploration = 0.1
+    decay = 0.001
     agt = agn.Agent(const.actions,verbose=False)
     agt.set_learning_options(exploration = exploration, 
                          learningrate=0.1, 
@@ -56,11 +56,14 @@ def train_model():
 
 
 if __name__ == "__main__":
+    start_time = time.time()
+
     agent_trained, steps, rewards, states = train_model()
+
+    end_time = time.time()
+    print(f"Thời gian thực thi: {end_time - start_time:.6f} giây")
     print("Steps = ", steps)
     print("Rewards = ", rewards)
     print("States = ", states)
-    execution_time = timeit.timeit(train_model, number=1)
-    print(f"Thời gian thực thi: {execution_time:.6f} giây")
 
 
