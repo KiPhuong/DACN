@@ -9,16 +9,16 @@ import time
 import const
 import utilities as ut
 import mockSQLenv as SQLenv
-import agent as agn
+import agent_on_gpu as agn
 
 def train_model_on_gpu():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Training on: {device}")
 
-    nepisodes = 100
-    exploration = 0.9
-    min_exploration = 0.05
-    decay = 0.95
+    nepisodes = 100000
+    exploration = 2
+    min_exploration = 0.3
+    decay = 0.0095
 
     agt = agn.Agent(const.actions, verbose=False)
     agt.set_learning_options(
@@ -47,12 +47,17 @@ def train_model_on_gpu():
         agt.set_learning_options(exploration=exploration)
 
     print("Done training")
-    file_path = 'q_table_trained.pkl'
+    file_path = 'q_table_trained_on_gpu.pkl'
     if os.path.exists(file_path):
         os.remove(file_path)
 
     # Chuyển Q-table từ Tensor về NumPy để lưu trữ
-    q_table_cpu = {key: value.cpu().numpy() for key, value in agt.Q.items()}
+    q_table_cpu = {
+        key: (value.cpu().numpy() if isinstance(value, torch.Tensor) else value)
+        for key, value in agt.Q.items()
+    }
+
+    #q_table_cpu = {key: value.cpu().numpy() for key, value in agt.Q.items()}
     joblib.dump(q_table_cpu, file_path)
 
     return agt, steps, rewards, states
@@ -63,5 +68,6 @@ if __name__ == "__main__":
     print("Steps =", steps)
     print("Rewards =", rewards)
     print("States =", states)
+    print("Q table = ", agent_trained.Q)
     end_time = time.time()
     print(f"Thời gian thực thi: {end_time - start_time:.6f} giây")

@@ -2,19 +2,20 @@ import numpy as np
 import mockSQLenv as srv
 import const
 import sys
+import torch
 import utilities as ut
-import random
+
 import requests
 from bs4 import BeautifulSoup
+
 
 """
 agent.py is based on FMZennaro's agent on https://github.com/FMZennaro/CTF-RL/blob/master/Simulation1/agent.py
 """
 
 class Agent():
-	def __init__(self, actions, verbose=True):
+	def __init__(self, actions, verbose=False):
 		self.actions_list = actions
-		self.action = ""
 		self.num_actions = len(actions)
 
 		self.Q = {(): np.ones(self.num_actions)}
@@ -29,10 +30,11 @@ class Agent():
 		self.total_trials = 0
 		self.total_successes = 0
 
-		self.url_first = "https://zixem.altervista.org/SQLi/level1.php?id=1 "
+		#self.url_first = "http://localhost/2291d7161c845409ba5a9c13ef489d0d5d345f6a.php?input="
+		self.url_first = "https://www.zixem.altervista.org/SQLi/level1.php?id=1 "
 		self.url =""
 
-	def set_learning_options(self,exploration=0.2,learningrate=0.1,discount=0.9, max_step = 100):
+	def set_learning_options(self,exploration=0.9,learningrate=0.1,discount=0.9, max_step = 100):
 		self.expl = exploration
 		self.lr = learningrate
 		self.discount = discount
@@ -40,46 +42,61 @@ class Agent():
 
 	def _select_action(self, learning = True):
 		if (np.random.random() < self.expl and learning):
-			return random.choice(self.actions_list)
+			return np.random.randint(0,self.num_actions)
 		else:
+			q_value = self.Q[self.state]
+			if isinstance(q_value, torch.Tensor):
+				q_value = q_value.cpu().numpy()  # Chuyển về NumPy nếu đang là Tensor
+
+			if q_value.ndim == 1:
+				action = np.argmax(q_value)
+			elif q_value.ndim == 2:
+				action = np.argmax(q_value, axis=1)  # Chỉnh `axis` nếu cần
+			else:
+				raise ValueError(f"Q-table có shape {q_value.shape}, không được hỗ trợ")
+			return action
+
 			return np.argmax(self.Q[self.state])
 
 
-	def _response (self, deterministic = False):
-		self.action = self._select_action(learning = not deterministic)
-		self.used_actions.append(self.action)
-		self.url = self.url_first + self.action
-
+	def _response(self, action):
+		self.url = str(self.url_first) + str(action)
 		html_content = requests.get(self.url).text
 		soup = BeautifulSoup(html_content, "html.parser")
 
-		reponse =""
-		if (soup.find(string=lambda s: s and "zixem@localhost" in s) != "None"): 
-			reponse = "zixem@localhost"
-			return reponse
-		elif (soup.find(string=lambda s: s and "8.0.36" in s) != "None"):
-			reponse = "8.0.36"
-			return reponse
-		elif (soup.find(string=lambda s: s and "You have an error in your SQL syntax;" in s)!="None"):
-			reponse = "You have error in your SQL syntax"
-			return reponse
-		elif (soup.find(string=lambda s: s and "The used SELECT statements have a different number of columns" in s)!="None"):
-			reponse = "The used SELECT statements have a different number of columns"
-			return reponse
-		else: return reponse
-
-
+		text_patterns = {
+        "zixem@localhost": "zixem@localhost",
+        "8.0.36": "8.0.36",
+        "You have an error in your SQL syntax;": "You have an error in your SQL syntax",
+        "The used SELECT statements have a different number of columns": "The used SELECT statements have a different number of columns",
+        "WAF block sqli payload": "WAF block sqli payload"
+    	}
+		for pattern, response in text_patterns.items():
+			if soup.find(string=lambda s: s and pattern in s):
+				return response
+		#return nothing
+		return ""	
 
 	def step(self, deterministic = False):
 		self.steps = self.steps + 1
-
-		reponse = self._response(self,deterministic)
+		action_num = self._select_action(learning = not deterministic)
+		action = self.actions_list[action_num]
+		if (self.verbose): print(action)
+		self.used_actions.append(action)
+		reponse = self._response(action)
 		state_resp, reward, termination, debug_msg = self.env.step(reponse)
+
+		
+		#print(state_resp)
+		#print(reward)
+		#print(termination)
+		#print(debug_msg)
 
 		self.rewards = self.rewards + reward
 
-		self._analyze_response(self.action, state_resp, reward, learning = not deterministic)
+		self._analyze_response(action_num, state_resp, reward, learning = not deterministic)
 		self.terminated = termination
+		#if(self.terminated): print("Done episode")
 		if(self.verbose): print(debug_msg)
 
 		return
@@ -102,11 +119,12 @@ class Agent():
 
 
 	def _analyze_response(self, action, response, reward, learning = True):
-		expl1 = 1 	#get version
-		expl2 = 2 	#get user
-		flag  = 3 	#syntax
-		expl3 = 4 	#difference col
-		wrong1 = 0 	#nothing
+		expl1 = 1 	#get user
+		expl2 = 2 	#get version
+		expl3  = 3 	#syntax
+		expl4 = 4 	#difference col
+		expl5 = 5 # waf block
+		wrong1 = -1 	#nothing
 
 		#The agent recieves data as the response
 		if(response==expl1 or response == expl2):
@@ -117,7 +135,11 @@ class Agent():
 			self._update_state(action, response_interpretation = -1)
 			if(learning): self._update_Q(action, reward)
 		#differ col
-		elif(response==expl3):
+		elif(response==expl4):
+			self._update_state(action, response_interpretation = -1)
+			if(learning): self._update_Q(action, reward)
+		#waf block
+		elif(response==expl5):
 			self._update_state(action, response_interpretation = -1)
 			if(learning): self._update_Q(action, reward)
 		#nothin
@@ -129,7 +151,13 @@ class Agent():
 			sys.exit()
 
 	def _update_Q(self, action, reward):
-		best_action_newstate = np.argmax(self.Q[self.state])
+		#best_action_newstate = np.argmax(self.Q[self.state])
+		q_value = self.Q[self.state]
+		if isinstance(q_value, torch.Tensor):  # Kiểm tra nếu là Tensor thì chuyển về CPU
+			q_value = q_value.cpu().numpy()
+		best_action_newstate = np.argmax(q_value)
+
+
 		self.Q[self.oldstate][action] = self.Q[self.oldstate][action] + self.lr * (reward + self.discount*self.Q[self.state][best_action_newstate] - self.Q[self.oldstate][action])
 
 	def reset(self,env):
@@ -185,7 +213,6 @@ class Agent():
 
 
 		state_resp, reward, termination, debug_msg = self.env.step(action)
-
 		self._analyze_response(action, state_resp, reward)
 		self.terminated = termination
 		print(debug_msg)
@@ -196,5 +223,8 @@ if __name__ == "__main__":
 	a = Agent(const.actions)
 	env = srv.mockSQLenv()
 	a.reset(env)
+	#a.run_human_look_episode()
 	a.run_episode()
+	#a.step()
+	#print(a.Q)
 	#a.step()

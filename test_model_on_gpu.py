@@ -6,7 +6,7 @@ import time
 import const
 import utilities as ut
 import mockSQLenv as SQLenv
-import agent as agn
+import agent_on_gpu as agn
 
 def test_model_on_gpu():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -16,7 +16,7 @@ def test_model_on_gpu():
     agt = agn.Agent(const.actions, verbose=False)
     
     # Load Q-table and move to GPU
-    q_table_cpu = joblib.load('q_table_trained.pkl')
+    q_table_cpu = joblib.load('q_table_trained_on_gpu.pkl')
     agt.Q = {key: torch.tensor(value, dtype=torch.float32, device=device) for key, value in q_table_cpu.items()}
     
     agt.set_learning_options(exploration=0.01, learningrate=0.1, discount=0.9, max_step=100)
