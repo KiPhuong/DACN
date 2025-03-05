@@ -15,7 +15,7 @@ def train_model_on_gpu():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Training on: {device}")
 
-    nepisodes = 100000
+    nepisodes = 10000
     exploration = 2
     min_exploration = 0.3
     decay = 0.0095
