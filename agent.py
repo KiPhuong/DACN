@@ -13,7 +13,7 @@ agent.py is based on FMZennaro's agent on https://github.com/FMZennaro/CTF-RL/bl
 """
 
 class Agent():
-	def __init__(self, actions, verbose=False):
+	def __init__(self, actions, verbose=True):
 		self.actions_list = actions
 		self.num_actions = len(actions)
 

@@ -12,7 +12,7 @@ def test_model_on_gpu():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Testing on: {device}")
 
-    nepisodes = 10000
+    nepisodes = 20000
     agt = agn.Agent(const.actions, verbose=False)
     
     # Load Q-table and move to GPU

@@ -17,7 +17,7 @@ import agent as agn
 
 
 def train_model(): 
-    nepisodes = 100000
+    nepisodes = 30000
 
     exploration = 0.9
     min_exploration = 0.1

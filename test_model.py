@@ -16,7 +16,7 @@ import agent as agn
 
 
 def test_model():
-    nepisodes = 10000
+    nepisodes = 20000
     agt = agn.Agent(const.actions,verbose=False)
     agt.Q = joblib.load('q_table_trained.pkl') 
     #print (agt.Q)
