@@ -100,6 +100,9 @@ class Agent():
 
         self.optimizer.zero_grad()
         loss.backward()
+        if(self.verbose):
+            print(f"Step {self.steps} | Action: {action} | Loss: {loss.item():.4f} | Reward: {reward}")
+
         self.optimizer.step()
 
         if terminated:
@@ -139,7 +142,7 @@ class Agent():
         return self.terminated
 
 if __name__ == "__main__":
-	a = Agent(const.actions, verbose= False)
+	a = Agent(const.actions, verbose= True)
 	env = srv.mockSQLenv()
 	a.reset(env)
 	a.run_episode(env)

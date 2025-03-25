@@ -9,7 +9,7 @@ def train_agent(num_episodes=1000, save_model=True, model_path="dqn_agent.pth"):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Training on: {device}")
 
-    agent = Agent(const.actions, verbose=False)
+    agent = Agent(const.actions, verbose=True)
     agent.model.to(device)
     steps, rewards, states = [], [], []
     for episode in range(num_episodes):
@@ -30,6 +30,9 @@ def train_agent(num_episodes=1000, save_model=True, model_path="dqn_agent.pth"):
             print(agent.model)
             for name, param in agent.model.state_dict().items():
                 print(name, param.shape)
+            for name, param in agent.model.named_parameters():
+                if param.requires_grad:
+                    print(f"{name} - giá trị đầu tiên: {param.data.view(-1)[:5]}")
     if save_model:
         torch.save(agent.model.state_dict(), model_path)
         print(f"Model saved to {model_path}")
@@ -37,4 +40,4 @@ def train_agent(num_episodes=1000, save_model=True, model_path="dqn_agent.pth"):
     
 
 if __name__ == "__main__":
-    train_agent(num_episodes=20000)
+    train_agent(num_episodes=1000)
