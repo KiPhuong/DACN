@@ -34,7 +34,7 @@ class Agent():
         self.loss_fn = nn.MSELoss()
         self.exploration = 1.0
         self.min_exploration = 0.1
-        self.decay = 0.995
+        self.decay = 0.99995
 
         self.env = srv.mockSQLenv()
         self.steps = 0
@@ -139,7 +139,7 @@ class Agent():
         self.total_trials += 1
         if(self.terminated):
             self.total_successes += 1
-        return self.terminated
+        return self.terminated, self.steps, self.rewards
 
 if __name__ == "__main__":
 	a = Agent(const.actions, verbose= True)

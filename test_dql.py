@@ -6,7 +6,7 @@ from agent_dql import Agent
 def test_agent(model_path="dqn_agent.pth", num_tests=1000):
     env = srv.mockSQLenv(verbose=True)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    agent = Agent(const.actions, verbose=True)
+    agent = Agent(const.actions, verbose=False)
     agent.device = device
     agent.model.to(device)
 
@@ -21,14 +21,13 @@ def test_agent(model_path="dqn_agent.pth", num_tests=1000):
         print(f"\n----- Test case {i+1} -----")
         env = srv.mockSQLenv(verbose=True)
         agent.reset(env)
-        result = agent.run_episode(env)
-        if result:
-            print("True")
-            successes += 1
+        terminated, steps, rewards = agent.run_episode(env)
+        if terminated:
+            print(f"Steps: {steps} | Rewards: {rewards}")
         else:
-            print("False")
+            print(f"False test case {i + 1}")
     
-    print(f"\nTrue time: {successes}/{num_tests}")
+    #print(f"\nTrue time: {successes}/{num_tests}")
 
 if __name__ == "__main__":
     test_agent()
