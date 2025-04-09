@@ -18,7 +18,7 @@ def train_model_on_gpu():
     nepisodes = 30000
     exploration = 2
     min_exploration = 0.3
-    decay = 0.0095
+    decay = 0.99995
 
     agt = agn.Agent(const.actions, verbose=False)
     agt.set_learning_options(

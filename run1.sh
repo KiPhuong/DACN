@@ -10,7 +10,9 @@
 
 module load python39
 
+pip3 install --user joblib
+pip3 install tensorflow==2.15
 #pip3 install networkx==2.8.8
 #pip3 install fastdtw==0.3.4
-#pip3 install  dgl -f https://data.dgl.ai/wheels/torch-2.4/cu121/repo.html
+
 python3 train_model_on_gpu.py

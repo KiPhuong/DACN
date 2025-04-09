@@ -2,9 +2,10 @@ import torch
 import const
 import os
 import mockSQLenv as srv
+import time
 from agent_dql import Agent
 
-def train_agent(num_episodes, save_model=True, model_path="dqn_agent.pth"):
+def train_agent(num_episodes, save_model=True, model_path="dqn_agent.pth",verbose = True):
     
     env = srv.mockSQLenv()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -14,6 +15,7 @@ def train_agent(num_episodes, save_model=True, model_path="dqn_agent.pth"):
     agent.model.to(device)
     steps, rewards = [], []
     total_rewards = 0
+    start_time = time.time()
     for episode in range(num_episodes):
         
         env = srv.mockSQLenv(
@@ -30,16 +32,17 @@ def train_agent(num_episodes, save_model=True, model_path="dqn_agent.pth"):
         if (episode + 1) % 100 == 0:
             print(f"Episode {episode + 1}/{num_episodes}: Total rewards = {total_rewards}")
             
-            print(steps)
-            print(rewards)
-            #print(agent.model)
-            steps, rewards = [], []
-            total_rewards = 0
-            for name, param in agent.model.state_dict().items():
-                print(name, param.shape)
-            for name, param in agent.model.named_parameters():
-                if param.requires_grad:
-                    print(f"{name} - giá trị đầu tiên: {param.data.view(-1)[:5]}")
+            if(verbose):
+                print(steps)
+                print(rewards)
+                #print(agent.model)
+                steps, rewards = [], []
+                total_rewards = 0
+                for name, param in agent.model.state_dict().items():
+                    print(name, param.shape)
+                for name, param in agent.model.named_parameters():
+                    if param.requires_grad:
+                        print(f"{name} - giá trị đầu tiên: {param.data.view(-1)[:5]}")
     if save_model:
         if os.path.exists(model_path):
             os.remove(model_path)
@@ -47,7 +50,10 @@ def train_agent(num_episodes, save_model=True, model_path="dqn_agent.pth"):
         torch.save(agent.model.state_dict(), model_path)
         print(f"Model saved to {model_path}")
 
+    end_time = time.time();
+    print(f"Thời gian thực thi: {end_time - start_time} giây")
+
     
 
 if __name__ == "__main__":
-    train_agent(num_episodes=1000)
+    train_agent(num_episodes=30000, verbose=False)

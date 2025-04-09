@@ -2,11 +2,14 @@ import torch
 import const
 import mockSQLenv as srv
 from agent_dql import Agent
+import time
+import sys
+from contextlib import redirect_stdout
 
-def test_agent(model_path="dqn_agent.pth", num_tests=1000):
+def test_agent(model_path="dqn_agent.pth", num_tests=10000):
     env = srv.mockSQLenv(verbose=True)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    agent = Agent(const.actions, verbose=False)
+    agent = Agent(const.actions, exploration=0.05, verbose=False)
     agent.device = device
     agent.model.to(device)
 
@@ -14,20 +17,24 @@ def test_agent(model_path="dqn_agent.pth", num_tests=1000):
     agent.model.load_state_dict(torch.load(model_path, map_location=device))
     agent.model.eval()  # chuyển sang chế độ inference (tắt dropout, batchnorm nếu có)
 
-    print(f"Trainning on {device}...")
+    with open("output_test_dql.txt", "w", encoding="utf-8") as file:
+        with redirect_stdout(file):
+            print(f"Testing on {device}...")
 
-    successes = 0
-    for i in range(num_tests):
-        print(f"\n----- Test case {i+1} -----")
-        env = srv.mockSQLenv(verbose=True)
-        agent.reset(env)
-        terminated, steps, rewards = agent.run_episode(env)
-        if terminated:
-            print(f"Steps: {steps} | Rewards: {rewards}")
-        else:
-            print(f"False test case {i + 1}")
-    
-    #print(f"\nTrue time: {successes}/{num_tests}")
+            for i in range(num_tests):
+                start_time = time.time()
+                print(f"\n----- Test case {i+1} -----")
+                env = srv.mockSQLenv(verbose=True)
+                agent.reset(env)
+                terminated, steps, rewards = agent.run_episode(env)
+
+                if terminated:
+                    print(f"Steps: {steps} | Rewards: {rewards}")
+                else:
+                    print(f"False test case {i + 1}")
+
+                elapsed = time.time() - start_time
+                print(f"{i+1}/{num_tests} [{'='*30}] - {elapsed/steps:.1f}s/step - reward-avg: {rewards/steps:.1f}")
 
 if __name__ == "__main__":
     test_agent()

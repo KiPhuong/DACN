@@ -5,6 +5,7 @@ import torch.optim as optim
 import mockSQLenv as srv
 import const
 import sys
+import os
 import utilities as ut
 import requests
 from bs4 import BeautifulSoup
@@ -22,7 +23,7 @@ class DQN(nn.Module):
         return self.fc3(x)
 
 class Agent():
-    def __init__(self, actions, verbose=True):
+    def __init__(self, actions, verbose=True, exploration = 1.0):
         self.actions_list = actions
         self.num_actions = len(actions)
         self.verbose = verbose
@@ -32,7 +33,7 @@ class Agent():
         self.model = DQN(len(actions), len(actions)).to(self.device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=0.001)
         self.loss_fn = nn.MSELoss()
-        self.exploration = 1.0
+        self.exploration = exploration
         self.min_exploration = 0.1
         self.decay = 0.99995
 
@@ -82,6 +83,7 @@ class Agent():
         #response = env.step(action)
         response = self._response(action) 
         state_resp, reward, terminated, debug_msg = self.env.step(response)
+        
         if(self.verbose):
             print("response = ",response)
             print("state response = ",state_resp)
