@@ -24,7 +24,7 @@ def test_agent(model_path="dqn_agent.pth", num_tests=10000):
             for i in range(num_tests):
                 start_time = time.time()
                 print(f"\n----- Test case {i+1} -----")
-                env = srv.mockSQLenv(verbose=True)
+                env = srv.mockSQLenv(verbose=False, data_reward=20, syntax_reward=-10, differ_col_reward=-10, query_reward=-10, waf_block=-30)
                 agent.reset(env)
                 terminated, steps, rewards = agent.run_episode(env)
 
