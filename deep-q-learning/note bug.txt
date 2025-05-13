@@ -1,0 +1,6 @@
+Ở file agent_dql.py
+- Hiện tại em tạo model với class DQN với imput_dim = len(action)
+self.model = DQN(len(actions), len(actions)).to(self.device)
+==> Em sẽ sửa lại thành imput_dim = 5 (số states) 
+
+	

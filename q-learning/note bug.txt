@@ -1,0 +1,4 @@
+- Ở file train_model_on_gpu.py 
+Em chưa thêm code phần metrics để đánh giá quá trình train của model
+==> Sau khi train xong model deep q learning trên slurm thì em sẽ chỉnh sửa lại
+
