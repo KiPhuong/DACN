@@ -6,10 +6,11 @@ import joblib
 import os
 from tqdm import tqdm
 import time
-import const
-import utilities as ut
-import mockSQLenv as SQLenv
+
 import agent_on_gpu as agn
+from env import mockSQLenv as SQLenv
+from env import const
+from env import utilities as ut
 
 def train_model_on_gpu():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

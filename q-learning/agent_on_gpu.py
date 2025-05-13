@@ -1,12 +1,12 @@
 import numpy as np
-import mockSQLenv as srv
-import const
 import sys
 import torch
-import utilities as ut
-
 import requests
 from bs4 import BeautifulSoup
+
+from env import mockSQLenv as srv
+from env import const
+from env import utilities as ut
 
 
 """

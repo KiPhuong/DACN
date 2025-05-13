@@ -2,18 +2,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter as SGfilter
 from IPython.display import clear_output
-import datetime
 import joblib
 from tqdm import tqdm
 import time
-#import requests
-#from bs4 import BeautifulSoup
-import os
-import const
-import utilities as ut
-import mockSQLenv as SQLenv
-import agent as agn
 
+import agent as agn
+from env import mockSQLenv as SQLenv
+from env import const
+from env import utilities as ut
 
 def test_model():
     nepisodes = 20000

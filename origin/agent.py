@@ -1,12 +1,11 @@
 import numpy as np
-import mockSQLenv as srv
-import const
 import sys
-import utilities as ut
-
 import requests
 from bs4 import BeautifulSoup
 
+from env import mockSQLenv as srv
+from env import const
+from env import utilities as ut
 
 """
 agent.py is based on FMZennaro's agent on https://github.com/FMZennaro/CTF-RL/blob/master/Simulation1/agent.py

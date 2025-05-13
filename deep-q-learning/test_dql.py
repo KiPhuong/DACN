@@ -1,10 +1,10 @@
 import torch
-import const
-import mockSQLenv as srv
 from agent_dql import Agent
 import time
-import sys
 from contextlib import redirect_stdout
+
+from env import mockSQLenv as srv
+from env import const
 
 def test_agent(model_path="dqn_agent.pth", num_tests=10000):
     env = srv.mockSQLenv(verbose=True)

@@ -2,13 +2,12 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import mockSQLenv as srv
-import const
-import sys
-import os
-import utilities as ut
 import requests
 from bs4 import BeautifulSoup
+
+from env import mockSQLenv as srv
+from env import const
+from env import utilities as ut
 
 class DQN(nn.Module):
     def __init__(self, input_dim, output_dim):
