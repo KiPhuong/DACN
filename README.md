@@ -8,8 +8,11 @@ numpy, joblib, tqdm, time, request, bs4, torch
 
 ### Content
 deep-q-learning: chứa các file liên quan đến thuật toán dql 
+
 q-learning: chứa các file liên quan đến thuật toán q-learning
+
 env: chứa các file liên quan đến môi trường bao gồm môi trường, sinh actions, ...
+
 origin: chứa các file ban đầu của nghiên cứu
 
 ### References
