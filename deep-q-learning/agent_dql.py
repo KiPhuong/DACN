@@ -36,6 +36,7 @@ class Agent():
         self.min_exploration = 0.1
         self.decay = 0.99995
 
+        self.action_taken = []
         self.env = srv.mockSQLenv()
         self.steps = 0
         self.rewards = 0
@@ -80,6 +81,7 @@ class Agent():
         action_num = self._select_action(state)
         action = self.actions_list[action_num]
         #response = env.step(action)
+        self.action_taken.append(action)
         response = self._response(action) 
         state_resp, reward, terminated, debug_msg = self.env.step(response)
         
@@ -140,7 +142,8 @@ class Agent():
         self.total_trials += 1
         if(self.terminated):
             self.total_successes += 1
-        return self.terminated, self.steps, self.rewards
+        
+        return self.terminated, self.steps, self.rewards, self.action_taken
 
 if __name__ == "__main__":
 	a = Agent(const.actions, verbose= True)

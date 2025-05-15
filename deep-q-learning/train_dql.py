@@ -7,8 +7,9 @@ import csv
 from agent_dql import Agent
 from env import mockSQLenv as srv
 from env import const
+from env import utilities as ut
 
-def train_agent(num_episodes, save_model=True, model_path="dqn_agent.pth", verbose=True, csv_path="metrics.csv"):
+def train_agent(num_episodes,num_measure, save_model=True, model_path="dqn_agent.pth", verbose=True, csv_path="metrics.csv"):
     env = srv.mockSQLenv()
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Training on: {device}")
@@ -21,6 +22,7 @@ def train_agent(num_episodes, save_model=True, model_path="dqn_agent.pth", verbo
     failure_reasons = {"max_step": 0, "waf_block": 0, "syntax_error": 0, "other": 0}
     episode_times = []
     total_rewards = 0
+    total_ep_action = []
     start_time = time.time()
 
     # Initialize CSV file
@@ -34,25 +36,31 @@ def train_agent(num_episodes, save_model=True, model_path="dqn_agent.pth", verbo
     with open(csv_path, mode='w', newline='') as csv_file:
         writer = csv.writer(csv_file)
         writer.writerow(csv_headers)
-
+  
     time_path_output = "time_output.txt"
+
+    if os.path.exists(time_path_output):
+        os.remove(time_path_output)
+
+
     for episode in range(num_episodes):
         episode_start = time.time()
         env = srv.mockSQLenv(
             verbose=False, data_reward=20, syntax_reward=-10,
-            differ_col_reward=-7, query_reward=-7, waf_block=-30
+            differ_col_reward=-10, query_reward=-10, waf_block=-30
         )
         agent.reset(env)
         agent.device = device
         
         # Track actions for trajectory analysis
         episode_actions = []
-        terminated, episode_steps, episode_rewards = agent.run_episode(env)
+        terminated, episode_steps, episode_rewards, episode_actions = agent.run_episode(env)
         
         # Record metrics
         steps.append(episode_steps)
         rewards.append(episode_rewards)
         total_rewards += episode_rewards
+        total_ep_action.append(episode_actions)
         
         # Success rate: Only count as success if terminated and not due to max_step
         if terminated and episode_steps < agent.max_step:
@@ -71,8 +79,8 @@ def train_agent(num_episodes, save_model=True, model_path="dqn_agent.pth", verbo
                 failure_reasons["other"] += 1
 
         # Trajectory: Store actions for every 1000th episode
-        if (episode + 1) % 1000 == 0:
-            trajectories.append(episode_actions)
+        if (episode + 1) % num_measure == 0:
+            trajectories.append(total_ep_action)
 
         # Computational cost
         episode_end = time.time()
@@ -84,12 +92,13 @@ def train_agent(num_episodes, save_model=True, model_path="dqn_agent.pth", verbo
         with open(time_path_output, mode='a') as time_file:
             time_file.write(f"{episode_time:.4f}\n")
 
-        # Print and save evaluation metrics every 10000 steps
-        if (episode + 1) % 10000 == 0:
-            success_rate = np.mean(successes[-10000:]) * 100
-            avg_queries = np.mean(steps[-10000:])
-            avg_reward = np.mean(rewards[-10000:])
-            avg_time = np.mean(episode_times[-10000:])
+        # Print and save evaluation metrics every 1000 steps
+        if (episode + 1) % num_measure == 0:
+        #if True:
+            success_rate = np.mean(successes[-num_measure:]) * 100
+            avg_queries = np.mean(steps[-num_measure:])
+            avg_reward = np.mean(rewards[-num_measure:])
+            avg_time = np.mean(episode_times[-num_measure:])
 
             # Action distribution for last trajectory
             action_dist = ""
@@ -98,11 +107,19 @@ def train_agent(num_episodes, save_model=True, model_path="dqn_agent.pth", verbo
                 action_counts = {act: last_trajectory.count(act) for act in set(last_trajectory)}
                 action_dist = str(action_counts)
 
-            print(f"\nEvaluation at Episode {episode + 1}/{num_episodes}:")
-            print(f"Success Rate: {success_rate:.2f}%")
-            print(f"Average Queries per Episode: {avg_queries:.2f}")
-            print(f"Average Reward per Episode: {avg_reward:.2f}")
-            print(f"Average Time per Episode: {avg_time:.4f} seconds")
+            # print(f"\nEvaluation at Episode {episode + 1}/{num_episodes}:")
+            # print(f"Success Rate: {success_rate:.2f}%")
+            # print(f"Average Queries per Episode: {avg_queries:.2f}")
+            # print(f"Average Reward per Episode: {avg_reward:.2f}")
+            # print(f"Average Time per Episode: {avg_time:.4f} seconds")
+            # print(f"Failure Analysis: {failure_reasons}")
+            # print(f"Trajectory Behavior (Action Distribution): {action_dist}")
+
+            print(f"\nEpisode {episode + 1}/{num_episodes}")
+            print(f"Success Rate (last {num_measure}): {success_rate:.2f}%")
+            print(f"Average Queries (last {num_measure}): {avg_queries:.2f}")
+            print(f"Average Reward (last {num_measure}): {avg_reward:.2f}")
+            print(f"Average Time (last {num_measure}): {avg_time:.4f} seconds")
             print(f"Failure Analysis: {failure_reasons}")
             print(f"Trajectory Behavior (Action Distribution): {action_dist}")
 
@@ -123,8 +140,8 @@ def train_agent(num_episodes, save_model=True, model_path="dqn_agent.pth", verbo
                 ])
 
             if verbose:
-                print(f"Steps (last 10000): {steps[-10000:][:10]}...")  # Print first 10 for brevity
-                print(f"Rewards (last 10000): {rewards[-10000:][:10]}...")
+                print(f"Steps (last {num_measure}): {steps[-num_measure:][:10]}...")  # Print first 10 for brevity
+                print(f"Rewards (last {num_measure}): {rewards[-num_measure:][:10]}...")
                 for name, param in agent.model.state_dict().items():
                     print(name, param.shape)
                 for name, param in agent.model.named_parameters():
@@ -147,4 +164,4 @@ def train_agent(num_episodes, save_model=True, model_path="dqn_agent.pth", verbo
     print(f"Metrics saved to {csv_path}")
     print(f"Episode times saved to {time_path_output}")
 if __name__ == "__main__":
-    train_agent(num_episodes=10000, verbose=False)
+    train_agent(num_episodes=10000, num_measure = 1000, verbose=False)
