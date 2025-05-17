@@ -4,12 +4,13 @@ import const
 class mockSQLenv(object):
     """
     """
-    def __init__(self, verbose=False, data_reward=10, syntax_reward=-5, differ_col_reward=-1, query_reward=-2, waf_block=-20):
+    def __init__(self, verbose=False, get_uname_rw=10, get_version_rw = 5 ,syntax_reward=-2, differ_col_reward=-1, query_reward=-3, waf_block=-20):
         # Get the action space
         self.A = np.array(const.actions)
-        self.query_reward = query_reward
-        self.data_reward = data_reward
-        self.syntax_reward = syntax_reward
+        self.query_reward = query_reward #nothing ressponse
+        self.get_uname_rw = get_uname_rw #get data
+        self.get_version_rw = get_version_rw
+        self.syntax_reward = syntax_reward # syntax error
         self.differ_col_reward = differ_col_reward
         self.waf_block = waf_block
         self.verbose = verbose
@@ -24,13 +25,13 @@ class mockSQLenv(object):
                 print('Correct exploratory user of the challenge. I return 1')
             self.termination = True
             self.debug_msg = 'Server response is 1'  # Lưu thông điệp vào debug_msg
-            return 1, self.data_reward, self.termination, self.debug_msg
+            return 1, self.get_uname_rw, self.termination, self.debug_msg
         elif response == "8.0.36":
             if self.verbose:
                 print('Correct exploratory version of the escape. I return 2')
             self.termination = True
             self.debug_msg = 'Server response is 2'  # Lưu thông điệp
-            return 2, self.data_reward, self.termination, self.debug_msg
+            return 2, self.get_version_rw, self.termination, self.debug_msg
         elif response == "You have an error in your SQL syntax":
             if self.verbose:
                 print('Syntax error. Server response 3')
