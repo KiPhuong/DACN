@@ -6,9 +6,9 @@ import csv
 from tqdm import tqdm
 
 import agent_on_gpu as agn
-from env import mockSQLenv as SQLenv
-from env import const
-from env import utilities as ut
+import mockSQLenv as SQLenv
+import const
+import utilities as ut
 
 def train_model_on_gpu(num_episodes=10000, num_measure=1000, save_model=True, model_path="q_table_trained_on_gpu.pkl", verbose=False, csv_path="metrics_gpu.csv"):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

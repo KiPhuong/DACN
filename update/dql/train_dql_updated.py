@@ -1,10 +1,11 @@
+
 import torch
 import os
 import time
 import numpy as np
 import csv
 
-from agent_dql import Agent
+from agent_dql_updated import Agent
 from env import mockSQLenv as srv
 from env import const
 from env import utilities as ut
@@ -45,7 +46,10 @@ def train_agent(num_episodes,num_measure, save_model=True, model_path="dqn_agent
 
     for episode in range(num_episodes):
         episode_start = time.time()
-        env = srv.mockSQLenv()
+        env = srv.mockSQLenv(
+            verbose=False, data_reward=20, syntax_reward=-10,
+            differ_col_reward=-10, query_reward=-10, waf_block=-30
+        )
         agent.reset(env)
         agent.device = device
         
@@ -91,7 +95,6 @@ def train_agent(num_episodes,num_measure, save_model=True, model_path="dqn_agent
 
         # Print and save evaluation metrics every 1000 steps
         if (episode + 1) % num_measure == 0:
-        #if True:
             success_rate = np.mean(successes[-num_measure:]) * 100
             avg_queries = np.mean(steps[-num_measure:])
             avg_reward = np.mean(rewards[-num_measure:])
@@ -103,14 +106,6 @@ def train_agent(num_episodes,num_measure, save_model=True, model_path="dqn_agent
                 last_trajectory = trajectories[-1]
                 action_counts = {act: last_trajectory.count(act) for act in set(last_trajectory)}
                 action_dist = str(action_counts)
-
-            # print(f"\nEvaluation at Episode {episode + 1}/{num_episodes}:")
-            # print(f"Success Rate: {success_rate:.2f}%")
-            # print(f"Average Queries per Episode: {avg_queries:.2f}")
-            # print(f"Average Reward per Episode: {avg_reward:.2f}")
-            # print(f"Average Time per Episode: {avg_time:.4f} seconds")
-            # print(f"Failure Analysis: {failure_reasons}")
-            # print(f"Trajectory Behavior (Action Distribution): {action_dist}")
 
             print(f"\nEpisode {episode + 1}/{num_episodes}")
             print(f"Success Rate (last {num_measure}): {success_rate:.2f}%")
@@ -137,7 +132,7 @@ def train_agent(num_episodes,num_measure, save_model=True, model_path="dqn_agent
                 ])
 
             if verbose:
-                print(f"Steps (last {num_measure}): {steps[-num_measure:][:10]}...")  # Print first 10 for brevity
+                print(f"Steps (last {num_measure}): {steps[-num_measure:][:10]}...")
                 print(f"Rewards (last {num_measure}): {rewards[-num_measure:][:10]}...")
                 for name, param in agent.model.state_dict().items():
                     print(name, param.shape)
@@ -145,7 +140,6 @@ def train_agent(num_episodes,num_measure, save_model=True, model_path="dqn_agent
                     if param.requires_grad:
                         print(f"{name} - First 5 values: {param.data.view(-1)[:5]}")
 
-            # Reset failure reasons for next interval
             failure_reasons = {"max_step": 0, "waf_block": 0, "syntax_error": 0, "other": 0}
 
     if save_model:
@@ -160,5 +154,6 @@ def train_agent(num_episodes,num_measure, save_model=True, model_path="dqn_agent
     print(f"Overall Average Queries: {np.mean(steps):.2f}")
     print(f"Metrics saved to {csv_path}")
     print(f"Episode times saved to {time_path_output}")
+
 if __name__ == "__main__":
     train_agent(num_episodes=10000, num_measure = 1000, verbose=False)

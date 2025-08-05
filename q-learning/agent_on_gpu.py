@@ -184,7 +184,7 @@ class Agent():
 		self.total_trials += 1
 		if(self.terminated):
 			self.total_successes += 1
-		return self.terminated
+		return self.terminated, self.used_actions
 
 	def run_human_look_episode(self):
 		_,_,self.terminated,s = self.env.reset()
